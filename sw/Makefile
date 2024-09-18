@@ -51,7 +51,8 @@ install:
 	install -d "$(DESTDIR)/etc/wib/"
 	install -m 0755 scripts/* "$(DESTDIR)/etc/wib/"
 	install -m 0755 extras/i2c_phase "$(DESTDIR)/etc/wib/i2c_phase"
-
+	install -m 0755 hermesmodules/hermes_udp_srv "$(DESTDIR)/bin/"
+        install -m 0755 hermesmodules/S99hermes_udp_srv_wib.sh "/etc/rc5.d/"
 
 clean:
 	@rm -rf build $(PBGENS)
