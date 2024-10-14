@@ -728,7 +728,7 @@ bool WIB_3ASIC::enable_wib_pulser(bool femb0, bool femb1, bool femb2, bool femb3
     // Start pulses
     prev = io_reg_read(&this->regs, REG_PULSER_CTRL);
     mask = 0xffffffff ^ 0b111111;
-    write = ((femb3 | femb2 | femb1 | femb0) << 5) | (1 << 4) | (femb0 << 3) | (femb1 << 2) | (femb2 << 1) | (femb3);
+    write = ((femb3 | femb2 | femb1 | femb0) << 5) | (1 << 4) | (femb3 << 3) | (femb2 << 2) | (femb1 << 1) | (femb0);
     io_reg_write(&this->regs, REG_PULSER_CTRL, (prev & mask) | write);
 
     bool enableFEMBs[] = {femb0, femb1, femb2, femb3};
