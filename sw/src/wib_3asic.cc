@@ -721,8 +721,8 @@ bool WIB_3ASIC::configure_wib_pulser(uint16_t pulse_dac, uint32_t pulse_period, 
 
 bool WIB_3ASIC::enable_wib_pulser(bool femb0, bool femb1, bool femb2, bool femb3) {
     uint32_t prev = io_reg_read(&this->regs, REG_PULSER_CTRL);
-    uint32_t mask = 0xffffffff ^ (0b1111 << 11);
-    uint32_t write = (femb3 << 14) | (femb2 << 13) | (femb1 << 12) | (femb0 << 11);
+    uint32_t mask = 0xffffffff ^ (0b11111 << 11);
+    uint32_t write = (femb0 | femb1 | femb2 | femb3) << 15;
     io_reg_write(&this->regs, REG_PULSER_CTRL, (prev & mask) | write);
 
     // Start pulses
@@ -736,7 +736,7 @@ bool WIB_3ASIC::enable_wib_pulser(bool femb0, bool femb1, bool femb2, bool femb3
     for (int i = 0; i < 4; i++) {
       if (enableFEMBs[i]) {
 	conf_res &= femb[i]->i2c_write_verify(0, 3, 0, 0x27, 0x1F);
-	conf_res &= femb[i]->i2c_write_verify(0, 3, 0, 0x26, 0x01);
+	conf_res &= femb[i]->i2c_write_verify(0, 3, 0, 0x26, 0x0);
 	conf_res &= femb[i]->i2c_write_verify(0, 2, 0, 0x27, 0x1F);
 	conf_res &= femb[i]->i2c_write_verify(0, 2, 0, 0x26, 0x0);
       }
