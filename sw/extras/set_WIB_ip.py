@@ -18,7 +18,11 @@ reg_value = int(sys.argv[1],16)
 #print(type(reg_value))
 slot_addr = (reg_value & 0x7) + 1
 crate_addr = ~((reg_value & 0xF0) >> 4) & 0xF
-det_addr = 3
+if slot_addr == 6 and crate_addr == 0:
+    slot_addr = 5
+det_addr = 10
+if crate_addr < 5:
+    det_addr = 3
 #print(hex(slot_addr))
 #print(hex(crate_addr))
 print (f"slot is {hex(slot_addr)} and crate is {hex(crate_addr)}")

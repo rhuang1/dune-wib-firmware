@@ -445,7 +445,7 @@ bool WIB_3ASIC::configure_wib(const wib::ConfigureWIB &conf) {
     for (int i = 0; i < 4; i++) { // Configure COLDATA
       if (conf.fembs(i).enabled()) {
 	// Read line driver settings for COLDATA
-	int lineDriver1 = get_line_driver_default();
+	int lineDriver1 = get_line_driver_default(conf.detector_type());
 	int lineDriver2 = lineDriver1;
 	if (conf.fembs(i).line_driver_size() == 1 && conf.fembs(i).line_driver(0) != 0) {
 	  lineDriver1 = conf.fembs(i).line_driver(0);
@@ -746,13 +746,17 @@ bool WIB_3ASIC::enable_wib_pulser(bool femb0, bool femb1, bool femb2, bool femb3
     return conf_res;
 }
 
-int WIB_3ASIC::get_line_driver_default() {
+int WIB_3ASIC::get_line_driver_default(int detector_type) {
   uint8_t crate_num = ~(backplane_crate_num()) & 0xF;
   uint8_t slot_num = backplane_slot_num() & 0x7;
   if (crate_num == 3 && (slot_num == 1 || slot_num == 2 || slot_num == 4)) {
     return 1;
+  } else if (crate_num == 10 && slot_num == 1) { 
+    return 1;
   } else {
-    int detector_type = getDetectorType();
+    if (detector_type == 0) {
+      detector_type = getDetectorType();
+    }
     if (detector_type > 4) {
       glog.log("Unknown detector type %d, using short line driver settings\n", detector_type);
       return 1;

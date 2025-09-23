@@ -169,7 +169,6 @@ bind_parser(poke_parser,poke)
 
 cdpeek_parser = sub.add_parser('cdpeek',help='Read a 8bit value from COLDATA I2C address space',add_help=False)
 cdpeek_parser.add_argument('femb_idx',type=int,choices=[0,1,2,3],help='FEMB to communicate with [0-3]')
-cdpeek_parser.add_argument('coldata_idx',type=int,choices=[0,1],help='COLDDATA chip to communicate with [0-1]')
 cdpeek_parser.add_argument('chip_addr',type=lambda x: int(x,16),help='DUNE I2C chip address (hex)')
 cdpeek_parser.add_argument('reg_page',type=lambda x: int(x,16),help='DUNE I2C register page (hex)')
 cdpeek_parser.add_argument('reg_addr',type=lambda x: int(x,16),help='DUNE I2C register address (hex)')
@@ -177,16 +176,16 @@ def cdpeek(args):
     req = wibpb.CDPeek()
     rep = wibpb.CDRegValue()
     req.femb_idx = args.femb_idx
-    req.coldata_idx = args.coldata_idx
+    req.coldata_idx = 0
+    req.chip_addr = args.chip_addr
     req.reg_page = args.reg_page
     req.reg_addr = args.reg_addr
     wib.send_command(req,rep)
-    print('femb:%i coldata:%i chip:0x%02X page:0x%02X reg:0x%02X -> 0x%02X'%(rep.femb_idx,rep.coldata_idx,rep.chip_addr,rep.reg_page,rep.reg_addr,rep.data))
+    print('femb:%i chip:0x%02X page:0x%02X reg:0x%02X -> 0x%02X'%(rep.femb_idx,rep.chip_addr,rep.reg_page,rep.reg_addr,rep.data))
 bind_parser(cdpeek_parser,cdpeek)
 
 cdpoke_parser = sub.add_parser('cdpoke',help='Write a 8bit value to COLDATA I2C address space',add_help=False)
 cdpoke_parser.add_argument('femb_idx',type=int,choices=[0,1,2,3],help='FEMB to communicate with')
-cdpoke_parser.add_argument('coldata_idx',type=int,choices=[0,1],help='COLDDATA chip to communicate with')
 cdpoke_parser.add_argument('chip_addr',type=int,help='DUNE I2C chip address')
 cdpoke_parser.add_argument('reg_page',type=int,help='DUNE I2C register page')
 cdpoke_parser.add_argument('reg_addr',type=int,help='DUNE I2C register address')
@@ -195,12 +194,13 @@ def cdpoke(args):
     req = wibpb.CDPoke()
     rep = wibpb.CDRegValue()
     req.femb_idx = args.femb_idx
-    req.coldata_idx = args.coldata_idx
+    req.coldata_idx = 0
+    req.chip_addr = args.chip_addr
     req.reg_page = args.reg_page
     req.reg_addr = args.reg_addr
     req.data = args.data
     wib.send_command(req,rep)
-    print('femb:%i coldata:%i chip:0x%02X page:0x%02X reg:0x%02X <- 0x%02X'%(rep.femb_idx,rep.coldata_idx,rep.chip_addr,rep.reg_page,rep.reg_addr,rep.data))
+    print('femb:%i chip:0x%02X page:0x%02X reg:0x%02X <- 0x%02X'%(rep.femb_idx,rep.chip_addr,rep.reg_page,rep.reg_addr,rep.data))
 bind_parser(cdpoke_parser,cdpoke)
 
 cdfastcmd_parser = sub.add_parser('cdfastcmd',help='Send the fast command cmd to all coldata chips',add_help=False)
