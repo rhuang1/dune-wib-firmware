@@ -129,8 +129,8 @@ bool WIB::reset_timing_endpoint() {
     //  If timing status was previously bad, need to readjust I2C phase
     if (!endpoint_lock) {
       int i2c_phase_steps = get_i2c_phase_steps();
-      glog.log("Timing status recovered from a bad state, readjusting I2C clock phase by %d steps\n", i2c_phase_steps);
-      i2c_phase_adjust(i2c_phase_steps);
+      //      glog.log("Timing status recovered from a bad state, readjusting I2C clock phase by %d steps\n", i2c_phase_steps);
+      //      i2c_phase_adjust(i2c_phase_steps);
     }
     return success;
 }
@@ -311,8 +311,10 @@ bool WIB::femb_power_config() {
     glog.log("\tdc2dc_o2 %0.2f\n",dc2dc_o2);
     glog.log("\tdc2dc_o3 %0.2f\n",dc2dc_o3);
     glog.log("\tdc2dc_o4 %0.2f\n",dc2dc_o4);
-    glog.log("\tDO_A0 %0.2f\n",ldo_a0);
-    glog.log("\tDO_A1 %0.2f\n",ldo_a1);
+
+    // These no longer exist on WIBv3
+    //    glog.log("\tDO_A0 %0.2f\n",ldo_a0);
+    //    glog.log("\tDO_A1 %0.2f\n",ldo_a1);
 
     // use the stored voltage config
     for (int i = 0; i <= 3; i++) {
@@ -320,8 +322,9 @@ bool WIB::femb_power_config() {
         femb_power_reg_ctrl(i, 1, dc2dc_o2); //dc2dc_O2
         femb_power_reg_ctrl(i, 2, dc2dc_o3); //dc2dc_O2
         femb_power_reg_ctrl(i, 3, dc2dc_o4); //dc2dc_O2
-        femb_power_reg_ctrl(i, 4, ldo_a0); //ldo_A0
-        femb_power_reg_ctrl(i, 5, ldo_a1); //ldo_A1
+	// LDOs removed on WIBv3
+	//        femb_power_reg_ctrl(i, 4, ldo_a0); //ldo_A0
+	//        femb_power_reg_ctrl(i, 5, ldo_a1); //ldo_A1
     }
     
     // configure all pins as outputs for regulator enablers

@@ -74,10 +74,6 @@ bool WIB_3ASIC::reset_frontend() {
     femb_rx_mask(0xFFFF); //all disabled
     glog.log("Resetting FEMB receiver\n");
     femb_rx_reset();
-    if (!felix_initialized) {
-        glog.log("Resetting FELIX transmitter\n");
-        felix_tx_reset();
-    }
     frontend_initialized = true;
     return success;
 }
@@ -92,7 +88,7 @@ bool WIB_3ASIC::femb_power_set(int femb_idx, bool on, bool cold) {
         glog.log("Powering on FEMB %i COLDATA\n",femb_idx);
         femb_power_en_ctrl(femb_idx, 0x6B); //COLDATA ON
         usleep(2000000);
-        glog.log("Loading %s COLDATA config\n",cold?"COLD":"WARM");
+	//        glog.log("Loading %s COLDATA config\n",cold?"COLD":"WARM");
         power_res &= femb[femb_idx]->configure_coldata(FRAME_14,1,1); //default config
         if (!power_res) {
             glog.log("Failed to configure COLDATA; aborting power on\n");
@@ -102,7 +98,7 @@ bool WIB_3ASIC::femb_power_set(int femb_idx, bool on, bool cold) {
         glog.log("Powering on FEMB %i COLDADC\n",femb_idx);
         femb_power_en_ctrl(femb_idx, 0xFF); //COLDATA+COLDADC ON
         usleep(1000000);
-        glog.log("Loading %s COLDADC config\n",cold?"COLD":"WARM");
+	//        glog.log("Loading %s COLDADC config\n",cold?"COLD":"WARM");
         power_res &= femb[femb_idx]->configure_coldadc(cold); //default config
         if (!power_res) {
             glog.log("Failed to configure COLDADC; aborting power on\n");
@@ -261,7 +257,7 @@ bool WIB_3ASIC::set_pulser(bool on) {
 	}
         return pulser_res;
     } else {
-        glog.log(on ? "Pulser already started\n" : "Pulser already stopped\n");
+      //        glog.log(on ? "Pulser already started\n" : "Pulser already stopped\n");
         return true;
     }
 }
@@ -346,19 +342,19 @@ bool WIB_3ASIC::power_wib(const wib::PowerWIB &conf) {
     for (int i = 0; i < 4; i++) {
         if (femb_i_on(conf,i)) {
             //Additional steps to turn on analog chips via COLDATA control regs
-            glog.log("Loading %s COLDADC config for FEMB %i\n",conf.cold()?"COLD":"WARM",i);
+            //glog.log("Loading %s COLDADC config for FEMB %i\n",conf.cold()?"COLD":"WARM",i);
             power_res &= femb[i]->configure_coldadc(conf.cold()); //default config
-            glog.log("Enabling FEMB %i U1 control signals\n",i);
+            // glog.log("Enabling FEMB %i U1 control signals\n",i);
             power_res &= femb[i]->set_control_reg(2,true,true); //VDDA on U1 ctrl_1/ctrl_0
             usleep(100000);
-            glog.log("Enabling FEMB %i U2 control_0 signal\n",i);
+            // glog.log("Enabling FEMB %i U2 control_0 signal\n",i);
             power_res &= femb[i]->set_control_reg(3,false,true);  //VDDD L on U2 ctrl_0
             usleep(100000);
-            glog.log("Enabling FEMB %i U2 control_1 signal\n",i);
+            //  glog.log("Enabling FEMB %i U2 control_1 signal\n",i);
             power_res &= femb[i]->set_control_reg(3,true,true);  //VDDD R on U2 ctrl_1
             usleep(100000);
             if (!power_res) {
-                glog.log("Failed to enable COLDADC power for FEMB %i, aborting\n",i);
+                glog.log("Failed to enable COLDADC power for FEMB %i with COLDATA control regs, aborting\n",i);
                 return false;
             }
         }
