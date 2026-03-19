@@ -144,7 +144,12 @@ public:
 
     // Read the onboard I2C sensors and fill the sensor structure
     bool read_sensors(wib::GetSensors::Sensors &sensors, bool verbose=false);
-    
+
+    // Read the power status of the FEMBs
+    // When read_voltages is False, will only check whether wib_server believes FEMB is on
+    // When read_voltages is True, will also return voltage/current readings for each FEMB's DCDC modules
+    bool check_femb_status(wib::GetFEMBStatus::FEMBStatus &status, bool read_voltages=false);
+
     // Read the status of the timing endpoint 
     bool read_timing_status(wib::GetTimingStatus::TimingStatus &status);
     

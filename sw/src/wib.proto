@@ -75,6 +75,29 @@ message ConfigurePower {
     
     //replies Status
 }
+
+// Replies with current power status of FEMBs.
+// Set read_voltages=true in request to ask WIB to read off DCDC voltages/currents for FEMB power
+message GetFEMBStatus {
+
+    // Default to false.
+    // When true, WIB will also return voltage/current readings from DCDC modules powering each FEMB
+    bool read_voltages = 1; 
+
+    // Replies with FEMB Status
+    message FEMBStatus {
+        repeated bool femb_power = 1;
+
+    	repeated double bias_voltage = 2;
+	repeated double bias_current = 3;
+	repeated double larasic_voltage = 4;
+	repeated double larasic_current = 5;	
+	repeated double coldadc_voltage = 6;
+	repeated double coldadc_current = 7;	
+	repeated double coldata_voltage = 8;
+	repeated double coldata_current = 9;
+    }
+}
  
 // Turn power ON and OFF for the FEMBs
 message PowerWIB {

@@ -91,6 +91,14 @@ def timing_status(args):
     wib.print_timing_status(rep)
 bind_parser(timing_status_parser,timing_status)
 
+sensors_parser = sub.add_parser('read_sensors', help='Print all sensor readings from the WIB', add_help=False)
+def read_sensors(args):
+    req = wibpb.GetSensors()
+    rep = wibpb.GetSensors.Sensors()
+    wib.send_command(req, rep)
+    print(rep)
+bind_parser(sensors_parser, read_sensors)
+
 script_parser = sub.add_parser('script',help='Run a WIB script',add_help=False)
 script_parser.add_argument('filename',help='local file will be sent, otherwise filename is remote in /etc/wib/ on the WIB')
 def script(args):
@@ -235,7 +243,7 @@ def update(args):
     print('WIB will now update and reboot.')
 bind_parser(update_parser,update)
 
-recompile_parser = sub.add_parser('recompile',help='Deploy a new root and boot archive to the WIB',add_help=False)
+recompile_parser = sub.add_parser('recompile',help='Recompile software on WIB',add_help=False)
 def recompile(args):
     req = wibpb.Recompile()
     rep = wibpb.Empty()

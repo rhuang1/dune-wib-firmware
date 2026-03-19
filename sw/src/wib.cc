@@ -864,6 +864,51 @@ bool WIB::read_sensors(wib::GetSensors::Sensors &sensors, bool verbose) {
     return true;
 }
 
+bool WIB::check_femb_status(wib::GetFEMBStatus::FEMBStatus &status, bool read_voltages) {
+    uint8_t ltc2991_addr[] = {0x48, 0x49, 0x4a, 0x4b}; // Addresses for LTC2991 of DCDC modules for FEMBs 0-3
+    if (read_voltages) {
+      i2c_select(I2C_SENSOR);
+
+      uint8_t buf[1] = {0x7};
+      i2c_write(&this->selected_i2c,0x70,buf,1); // enable i2c repeater
+
+    }
+    for (int fembIdx = 0; fembIdx < 4; fembIdx++) {
+      status.add_femb_power(frontend_power[fembIdx]);
+
+      if (read_voltages) {	
+	i2c_t *femb_power_mon_i2c = &this->femb_en_i2c;
+	uint8_t addr = ltc2991_addr[fembIdx];
+	enable_ltc2991(femb_power_mon_i2c, addr);
+	double readings[] = {0,0,0,0,0,0};
+	for (uint8_t j = 1; j <= 6; j++) {
+	  double v = 0.00030518*read_ltc2991_value(femb_power_mon_i2c,addr,j);
+	  readings[j-1] = v;
+	}
+	// Resistor values are 0.1, 0.1, 0.01 for the LArASIC, COLDATA, ColdADC lines respectively
+	status.add_larasic_voltage(readings[1]);
+	status.add_larasic_current((readings[0] - readings[1]) / 0.1);
+	status.add_coldata_voltage(readings[3]);
+	status.add_coldata_current((readings[2] - readings[3]) / 0.1);
+	status.add_coldadc_voltage(readings[5]);
+	status.add_coldadc_current((readings[4] - readings[5]) / 0.01);	
+      }
+    }
+    // 5 V bias line for FEMB LDOs are from a different LTC2991 module
+    if (read_voltages) {
+      i2c_t *femb_power_mon_i2c = &this->femb_en_i2c;
+      enable_ltc2991(femb_power_mon_i2c, 0x4e);
+
+      for (int fembIdx = 0; fembIdx < 4; fembIdx++) {
+	double v_0 = 0.00030518*read_ltc2991_value(femb_power_mon_i2c,0x4e,fembIdx*2);
+	double v_1 = 0.00030518*read_ltc2991_value(femb_power_mon_i2c,0x4e,fembIdx*2 + 1);
+	status.add_bias_voltage(v_1);
+	status.add_bias_current((v_0 - v_1) / 0.1);
+      }
+    }
+    return true;
+}
+
 bool WIB::read_timing_status(wib::GetTimingStatus::TimingStatus &status) {
 
     constexpr uint8_t pll_i2c_adr = 0x6b; //address of SI5344 chip
