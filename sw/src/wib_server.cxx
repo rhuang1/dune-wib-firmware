@@ -244,7 +244,13 @@ int main(int argc, char **argv) {
             wib::GetSensors::Sensors sensors;    
             w->read_sensors(sensors);
             sensors.SerializeToString(&reply_str);
-        } else if (command.cmd().Is<wib::ResetTiming>()) {
+        } else if (command.cmd().Is<wib::GetFEMBStatus>()) {
+  	    wib::GetFEMBStatus req;
+  	    command.cmd().UnpackTo(&req);
+	    wib::GetFEMBStatus::FEMBStatus rep;
+	    w->check_femb_status(rep, req.read_voltages());
+	    rep.SerializeToString(&reply_str);
+	} else if (command.cmd().Is<wib::ResetTiming>()) {
             glog.log("reset_timing\n");
             wib::GetTimingStatus::TimingStatus rep;    
             w->reset_timing_endpoint(); 

@@ -74,10 +74,6 @@ bool WIB_3ASIC::reset_frontend() {
     femb_rx_mask(0xFFFF); //all disabled
     glog.log("Resetting FEMB receiver\n");
     femb_rx_reset();
-    if (!felix_initialized) {
-        glog.log("Resetting FELIX transmitter\n");
-        felix_tx_reset();
-    }
     frontend_initialized = true;
     return success;
 }
@@ -92,7 +88,7 @@ bool WIB_3ASIC::femb_power_set(int femb_idx, bool on, bool cold) {
         glog.log("Powering on FEMB %i COLDATA\n",femb_idx);
         femb_power_en_ctrl(femb_idx, 0x6B); //COLDATA ON
         usleep(2000000);
-        glog.log("Loading %s COLDATA config\n",cold?"COLD":"WARM");
+	//        glog.log("Loading %s COLDATA config\n",cold?"COLD":"WARM");
         power_res &= femb[femb_idx]->configure_coldata(FRAME_14,1,1); //default config
         if (!power_res) {
             glog.log("Failed to configure COLDATA; aborting power on\n");
@@ -102,7 +98,7 @@ bool WIB_3ASIC::femb_power_set(int femb_idx, bool on, bool cold) {
         glog.log("Powering on FEMB %i COLDADC\n",femb_idx);
         femb_power_en_ctrl(femb_idx, 0xFF); //COLDATA+COLDADC ON
         usleep(1000000);
-        glog.log("Loading %s COLDADC config\n",cold?"COLD":"WARM");
+	//        glog.log("Loading %s COLDADC config\n",cold?"COLD":"WARM");
         power_res &= femb[femb_idx]->configure_coldadc(cold); //default config
         if (!power_res) {
             glog.log("Failed to configure COLDADC; aborting power on\n");
@@ -261,7 +257,7 @@ bool WIB_3ASIC::set_pulser(bool on) {
 	}
         return pulser_res;
     } else {
-        glog.log(on ? "Pulser already started\n" : "Pulser already stopped\n");
+      //        glog.log(on ? "Pulser already started\n" : "Pulser already stopped\n");
         return true;
     }
 }
@@ -346,19 +342,19 @@ bool WIB_3ASIC::power_wib(const wib::PowerWIB &conf) {
     for (int i = 0; i < 4; i++) {
         if (femb_i_on(conf,i)) {
             //Additional steps to turn on analog chips via COLDATA control regs
-            glog.log("Loading %s COLDADC config for FEMB %i\n",conf.cold()?"COLD":"WARM",i);
+            //glog.log("Loading %s COLDADC config for FEMB %i\n",conf.cold()?"COLD":"WARM",i);
             power_res &= femb[i]->configure_coldadc(conf.cold()); //default config
-            glog.log("Enabling FEMB %i U1 control signals\n",i);
+            // glog.log("Enabling FEMB %i U1 control signals\n",i);
             power_res &= femb[i]->set_control_reg(2,true,true); //VDDA on U1 ctrl_1/ctrl_0
             usleep(100000);
-            glog.log("Enabling FEMB %i U2 control_0 signal\n",i);
+            // glog.log("Enabling FEMB %i U2 control_0 signal\n",i);
             power_res &= femb[i]->set_control_reg(3,false,true);  //VDDD L on U2 ctrl_0
             usleep(100000);
-            glog.log("Enabling FEMB %i U2 control_1 signal\n",i);
+            //  glog.log("Enabling FEMB %i U2 control_1 signal\n",i);
             power_res &= femb[i]->set_control_reg(3,true,true);  //VDDD R on U2 ctrl_1
             usleep(100000);
             if (!power_res) {
-                glog.log("Failed to enable COLDADC power for FEMB %i, aborting\n",i);
+                glog.log("Failed to enable COLDADC power for FEMB %i with COLDATA control regs, aborting\n",i);
                 return false;
             }
         }
@@ -445,7 +441,7 @@ bool WIB_3ASIC::configure_wib(const wib::ConfigureWIB &conf) {
     for (int i = 0; i < 4; i++) { // Configure COLDATA
       if (conf.fembs(i).enabled()) {
 	// Read line driver settings for COLDATA
-	int lineDriver1 = get_line_driver_default();
+	int lineDriver1 = get_line_driver_default(conf.detector_type());
 	int lineDriver2 = lineDriver1;
 	if (conf.fembs(i).line_driver_size() == 1 && conf.fembs(i).line_driver(0) != 0) {
 	  lineDriver1 = conf.fembs(i).line_driver(0);
@@ -721,14 +717,14 @@ bool WIB_3ASIC::configure_wib_pulser(uint16_t pulse_dac, uint32_t pulse_period, 
 
 bool WIB_3ASIC::enable_wib_pulser(bool femb0, bool femb1, bool femb2, bool femb3) {
     uint32_t prev = io_reg_read(&this->regs, REG_PULSER_CTRL);
-    uint32_t mask = 0xffffffff ^ (0b1111 << 11);
-    uint32_t write = (femb3 << 14) | (femb2 << 13) | (femb1 << 12) | (femb0 << 11);
+    uint32_t mask = 0xffffffff ^ (0b11111 << 11);
+    uint32_t write = (femb0 | femb1 | femb2 | femb3) << 15;
     io_reg_write(&this->regs, REG_PULSER_CTRL, (prev & mask) | write);
 
     // Start pulses
     prev = io_reg_read(&this->regs, REG_PULSER_CTRL);
     mask = 0xffffffff ^ 0b111111;
-    write = ((femb3 | femb2 | femb1 | femb0) << 5) | (1 << 4) | (femb0 << 3) | (femb1 << 2) | (femb2 << 1) | (femb3);
+    write = ((femb3 | femb2 | femb1 | femb0) << 5) | (1 << 4) | (femb3 << 3) | (femb2 << 2) | (femb1 << 1) | (femb0);
     io_reg_write(&this->regs, REG_PULSER_CTRL, (prev & mask) | write);
 
     bool enableFEMBs[] = {femb0, femb1, femb2, femb3};
@@ -736,7 +732,7 @@ bool WIB_3ASIC::enable_wib_pulser(bool femb0, bool femb1, bool femb2, bool femb3
     for (int i = 0; i < 4; i++) {
       if (enableFEMBs[i]) {
 	conf_res &= femb[i]->i2c_write_verify(0, 3, 0, 0x27, 0x1F);
-	conf_res &= femb[i]->i2c_write_verify(0, 3, 0, 0x26, 0x01);
+	conf_res &= femb[i]->i2c_write_verify(0, 3, 0, 0x26, 0x0);
 	conf_res &= femb[i]->i2c_write_verify(0, 2, 0, 0x27, 0x1F);
 	conf_res &= femb[i]->i2c_write_verify(0, 2, 0, 0x26, 0x0);
       }
@@ -746,13 +742,17 @@ bool WIB_3ASIC::enable_wib_pulser(bool femb0, bool femb1, bool femb2, bool femb3
     return conf_res;
 }
 
-int WIB_3ASIC::get_line_driver_default() {
+int WIB_3ASIC::get_line_driver_default(int detector_type) {
   uint8_t crate_num = ~(backplane_crate_num()) & 0xF;
   uint8_t slot_num = backplane_slot_num() & 0x7;
   if (crate_num == 3 && (slot_num == 1 || slot_num == 2 || slot_num == 4)) {
     return 1;
+  } else if (crate_num == 10 && slot_num == 1) { 
+    return 1;
   } else {
-    int detector_type = getDetectorType();
+    if (detector_type == 0) {
+      detector_type = getDetectorType();
+    }
     if (detector_type > 4) {
       glog.log("Unknown detector type %d, using short line driver settings\n", detector_type);
       return 1;

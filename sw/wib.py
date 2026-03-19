@@ -112,7 +112,24 @@ class WIB:
         timestamps = np.frombuffer(rep.deframed_timestamps,dtype=np.uint64).reshape((2,num))
         samples = np.frombuffer(rep.deframed_samples,dtype=np.uint16).reshape((4,128,num))
         return timestamps,samples
-    
+
+    def print_femb_status(self, femb_status):
+        voltageReadings = len(femb_status.bias_voltage) > 0
+        for idx, val in enumerate(femb_status.femb_power):
+            if val:
+                print("-- FEMB %d is ON --" % idx)
+            else:
+                print("-- FEMB %d is OFF --" % idx)
+            if voltageReadings:
+                print("FEMB %d Bias Voltage: %.4f" % (idx, femb_status.bias_voltage[idx]))
+                print("FEMB %d Bias Current: %.4f" % (idx, femb_status.bias_current[idx]))
+                print("FEMB %d LArASIC Voltage: %.4f" % (idx, femb_status.larasic_voltage[idx]))
+                print("FEMB %d LArASIC Current: %.4f" % (idx, femb_status.larasic_current[idx]))
+                print("FEMB %d ColdADC Voltage: %.4f" % (idx, femb_status.coldadc_voltage[idx]))
+                print("FEMB %d ColdADC Current: %.4f" % (idx, femb_status.coldadc_current[idx]))
+                print("FEMB %d COLDATA Voltage: %.4f" % (idx, femb_status.coldata_voltage[idx]))
+                print("FEMB %d COLDATA Current: %.4f" % (idx, femb_status.coldata_current[idx]))
+        
     def print_timing_status(self,timing_status):
         print('--- PLL INFO ---')
         print('LOS:         0x%x'%(timing_status.los_val & 0x0f))

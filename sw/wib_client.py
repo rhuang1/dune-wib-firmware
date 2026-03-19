@@ -91,6 +91,14 @@ def timing_status(args):
     wib.print_timing_status(rep)
 bind_parser(timing_status_parser,timing_status)
 
+sensors_parser = sub.add_parser('read_sensors', help='Print all sensor readings from the WIB', add_help=False)
+def read_sensors(args):
+    req = wibpb.GetSensors()
+    rep = wibpb.GetSensors.Sensors()
+    wib.send_command(req, rep)
+    print(rep)
+bind_parser(sensors_parser, read_sensors)
+
 script_parser = sub.add_parser('script',help='Run a WIB script',add_help=False)
 script_parser.add_argument('filename',help='local file will be sent, otherwise filename is remote in /etc/wib/ on the WIB')
 def script(args):
@@ -169,7 +177,6 @@ bind_parser(poke_parser,poke)
 
 cdpeek_parser = sub.add_parser('cdpeek',help='Read a 8bit value from COLDATA I2C address space',add_help=False)
 cdpeek_parser.add_argument('femb_idx',type=int,choices=[0,1,2,3],help='FEMB to communicate with [0-3]')
-cdpeek_parser.add_argument('coldata_idx',type=int,choices=[0,1],help='COLDDATA chip to communicate with [0-1]')
 cdpeek_parser.add_argument('chip_addr',type=lambda x: int(x,16),help='DUNE I2C chip address (hex)')
 cdpeek_parser.add_argument('reg_page',type=lambda x: int(x,16),help='DUNE I2C register page (hex)')
 cdpeek_parser.add_argument('reg_addr',type=lambda x: int(x,16),help='DUNE I2C register address (hex)')
@@ -177,16 +184,16 @@ def cdpeek(args):
     req = wibpb.CDPeek()
     rep = wibpb.CDRegValue()
     req.femb_idx = args.femb_idx
-    req.coldata_idx = args.coldata_idx
+    req.coldata_idx = 0
+    req.chip_addr = args.chip_addr
     req.reg_page = args.reg_page
     req.reg_addr = args.reg_addr
     wib.send_command(req,rep)
-    print('femb:%i coldata:%i chip:0x%02X page:0x%02X reg:0x%02X -> 0x%02X'%(rep.femb_idx,rep.coldata_idx,rep.chip_addr,rep.reg_page,rep.reg_addr,rep.data))
+    print('femb:%i chip:0x%02X page:0x%02X reg:0x%02X -> 0x%02X'%(rep.femb_idx,rep.chip_addr,rep.reg_page,rep.reg_addr,rep.data))
 bind_parser(cdpeek_parser,cdpeek)
 
 cdpoke_parser = sub.add_parser('cdpoke',help='Write a 8bit value to COLDATA I2C address space',add_help=False)
 cdpoke_parser.add_argument('femb_idx',type=int,choices=[0,1,2,3],help='FEMB to communicate with')
-cdpoke_parser.add_argument('coldata_idx',type=int,choices=[0,1],help='COLDDATA chip to communicate with')
 cdpoke_parser.add_argument('chip_addr',type=int,help='DUNE I2C chip address')
 cdpoke_parser.add_argument('reg_page',type=int,help='DUNE I2C register page')
 cdpoke_parser.add_argument('reg_addr',type=int,help='DUNE I2C register address')
@@ -195,12 +202,13 @@ def cdpoke(args):
     req = wibpb.CDPoke()
     rep = wibpb.CDRegValue()
     req.femb_idx = args.femb_idx
-    req.coldata_idx = args.coldata_idx
+    req.coldata_idx = 0
+    req.chip_addr = args.chip_addr
     req.reg_page = args.reg_page
     req.reg_addr = args.reg_addr
     req.data = args.data
     wib.send_command(req,rep)
-    print('femb:%i coldata:%i chip:0x%02X page:0x%02X reg:0x%02X <- 0x%02X'%(rep.femb_idx,rep.coldata_idx,rep.chip_addr,rep.reg_page,rep.reg_addr,rep.data))
+    print('femb:%i chip:0x%02X page:0x%02X reg:0x%02X <- 0x%02X'%(rep.femb_idx,rep.chip_addr,rep.reg_page,rep.reg_addr,rep.data))
 bind_parser(cdpoke_parser,cdpoke)
 
 cdfastcmd_parser = sub.add_parser('cdfastcmd',help='Send the fast command cmd to all coldata chips',add_help=False)
@@ -208,7 +216,7 @@ cdfastcmd_parser.add_argument('command',choices=['reset', 'act', 'sync', 'edge',
 def cdfastcmd(args):
     fast_cmds = { 'reset':1, 'act':2, 'sync':4, 'edge':8, 'idle':16, 'edge_act':32 }
     req = wibpb.CDFastCmd()
-    req.cmd = fast_cmds[argument.command]
+    req.cmd = fast_cmds[args.command]
     rep = wibpb.Empty()
     wib.send_command(req,rep)
     print('Fast command sent')
@@ -235,7 +243,7 @@ def update(args):
     print('WIB will now update and reboot.')
 bind_parser(update_parser,update)
 
-recompile_parser = sub.add_parser('recompile',help='Deploy a new root and boot archive to the WIB',add_help=False)
+recompile_parser = sub.add_parser('recompile',help='Recompile software on WIB',add_help=False)
 def recompile(args):
     req = wibpb.Recompile()
     rep = wibpb.Empty()
