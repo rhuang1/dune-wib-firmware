@@ -35,6 +35,16 @@ Additional information about the hardware can be found at the following links:
 
 * [WIB3 schematics](https://docs.dunescience.org/cgi-bin/private/ShowDocument?docid=24127) (latest version)
 
+## Basic Software Script Setup
+
+Follow this section's instructions if you're only interested in setup of the basic client-side scripts for interfacing with the WIB, rather than active development of the software on the WIB. These instructions assume you have conda setup already.
+
+1. Navigate to the sw/ directory, which contains most of the relevant scripts.
+2. conda env create -f environment.yml
+3. conda activate wib-env
+
+With this environment, you should be able to run the python scripts for interfacing with the WIB, such as wib_client.py, wib_power.py, and wib_femb_status.py.
+
 ## Development
 
 The WIB firmware is several different projects, including an Ultrascale+ 

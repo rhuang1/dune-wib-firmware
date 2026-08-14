@@ -141,7 +141,9 @@ class WIB:
         print('HOLD FLG:    0x%x'%( (timing_status.lol_flg_val >> 5) & 0x1 ))
         print('LOL FLG:     0x%x'%( (timing_status.lol_flg_val >> 1) & 0x1 ))
         print('--- EPT INFO ---')
-        print('EPT CDR LOS: 0x%x'%( (timing_status.ept_status >> 17) & 0x1 )) # bit 17 is CDR LOS as seen by endpoint
-        print('EPT CDR LOL: 0x%x'%( (timing_status.ept_status >> 16) & 0x1 )) # bit 16 is CDR LOL as seen by endpoint
-        print('EPT TS RDY:  0x%x'%( (timing_status.ept_status >> 8 ) & 0x1 )) # bit 8 is ts ready
+        print('EPT CDR LOS: 0x%x'%( (timing_status.ept_status >> 18) & 0x1 )) # bit 18 is CDR LOS as seen by endpoint
+        print('EPT CDR LOL: 0x%x'%( (timing_status.ept_status >> 17) & 0x1 )) # bit 17 is CDR LOL as seen by endpoint
+        print('EPT TS SYNC: 0x%x'%( (timing_status.ept_status >> 8 ) & 0x0f )) # bits 8-15 are ts sync
+        print('EPT TS SYNCV:0x%x'%( (timing_status.ept_status >> 16 ) & 0x01 )) # bit 16 is ts sync_v
+        print('EPT TS RDY:  0x%x'%( (timing_status.ept_status >> 5 ) & 0x1 )) # bit 5 is ts ready
         print('EPT STATE:   0x%x'%(  timing_status.ept_status & 0x0f )) # bits 3:0 are the endpoint state

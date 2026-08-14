@@ -1,0 +1,13 @@
+name: wib-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - cxx-compiler
+  - make
+  - protobuf=6.31.1
+  - libprotobuf=6.31.1
+  - zeromq
+  - cppzmq
+  - pyzmq
+  - numpy
